@@ -5,6 +5,7 @@ class TOCGenerator:
     def __init__(self, path: str) -> None:
         self._path = path
         self._compile = re.compile(r'(#{1,}) (.*)')
+        self._cm_compile = re.compile(r'`{3,}.*')
         self._toc = {}
 
     def generate(self, issue=False):
@@ -39,9 +40,12 @@ class TOCGenerator:
         with open(self._path, 'r', encoding='utf-8') as fin:
             with open(out_path, 'w', encoding='utf-8') as fout:
                 l = fin.readline()
+                comment=False
                 while l:
                     match = self._compile.match(l)
-                    if match:
+                    if self._cm_compile.match(l):
+                        comment = not comment
+                    if not comment and match:
                         level = len(match.group(1))
                         title = match.group(2).strip()
                         tag_id = TOCGenerator._generate_link(title)
