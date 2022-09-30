@@ -5,10 +5,10 @@ Generate table of contents for GitHub readme.md and issue. 支持中文
 
 ```powershell
 # Print the table of contents for GitHub readme.md
-python main.py [file_path]
+python toc_generator.py [file_path]
 
 # Print the table of contents for GitHub issue, output file [file_path].convert_toc.md simultaneously
-python main.py [file_path] -i
+python toc_generator.py [file_path] -i
 ```
 
 In GitHub issues, only titles in `<h2 id="2">` format can be located and jumped, using the `-i` option will generate a copy file where the title has been converted from `# xxx` to `<h id="xxx">xxx</h>`

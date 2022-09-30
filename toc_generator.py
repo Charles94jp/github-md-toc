@@ -1,11 +1,12 @@
 import re
+import sys
 
 
 class TOCGenerator:
     def __init__(self, path: str) -> None:
         self._path = path
         self._compile = re.compile(r'(#{1,}) (.*)')
-        self._cm_compile = re.compile(r'`{3,}.*')
+        self._cm_compile = re.compile(r'(`{3,}).*')
         self._toc = {}
 
     def generate(self, issue=False):
@@ -20,9 +21,16 @@ class TOCGenerator:
         print('Generate TOC for GitHub README.md\n')
         with open(self._path, 'r', encoding='utf-8') as f:
             l = f.readline()
+            comment = -1
             while l:
                 match = self._compile.match(l)
-                if match:
+                cmatch = self._cm_compile.match(l)
+                if cmatch:
+                    if comment == -1:
+                        comment = len(cmatch.group(1))
+                    elif comment == len(cmatch.group(1)):
+                        comment = -1
+                if comment == -1 and match:
                     level = len(match.group(1))
                     self._toc[match.group(2).strip()] = level
                 l = f.readline()
@@ -40,12 +48,18 @@ class TOCGenerator:
         with open(self._path, 'r', encoding='utf-8') as fin:
             with open(out_path, 'w', encoding='utf-8') as fout:
                 l = fin.readline()
-                comment=False
+                comment = -1
                 while l:
+                    # 判断是否是标题
                     match = self._compile.match(l)
-                    if self._cm_compile.match(l):
-                        comment = not comment
-                    if not comment and match:
+                    # 判断是否是注释
+                    cmatch = self._cm_compile.match(l)
+                    if cmatch:
+                        if comment == -1:
+                            comment = len(cmatch.group(1))
+                        elif comment == len(cmatch.group(1)):
+                            comment = -1
+                    if comment == -1 and match:
                         level = len(match.group(1))
                         title = match.group(2).strip()
                         tag_id = TOCGenerator._generate_link(title)
@@ -79,3 +93,17 @@ class TOCGenerator:
                 continue
             r.append(s)
         return ''.join(r)
+
+
+def main():
+    """
+    脚本总是需要一个文件目录参数，如果在目录参数后还有参数，则将启用issue模式，否则启用readme模式
+
+    :return:
+    """
+    generator = TOCGenerator(sys.argv[1])
+    generator.generate(issue=True if len(sys.argv) == 3 and sys.argv[2] == '-i' else False)
+
+
+if __name__ == '__main__':
+    main()
